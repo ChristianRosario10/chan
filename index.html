@@ -1,0 +1,50 @@
+<!-- Add this inside your dashboard.html, or as a separate file -->
+<div id="relay-control-panel" style="max-width:400px;margin:2rem auto;text-align:center;">
+    <h2>ESP32 Relay Control</h2>
+    <div id="relay-status" style="font-size:1.2em;margin-bottom:1em;">Status: <span>Unknown</span></div>
+    <button id="relay-on-btn" style="padding:1em 2em;margin:0.5em;font-size:1.1em;">Relay ON</button>
+    <button id="relay-off-btn" style="padding:1em 2em;margin:0.5em;font-size:1.1em;">Relay OFF</button>
+    <button id="relay-toggle-btn" style="padding:1em 2em;margin:0.5em;font-size:1.1em;">Toggle Relay</button>
+  </div>
+  <script>
+    // Set this to your ESP32's IP or 'http://esp32.local' if mDNS works
+    const ESP32_BASE_URL = 'http://192.168.56.215';
+  
+    const statusEl = document.getElementById('relay-status').querySelector('span');
+    const onBtn = document.getElementById('relay-on-btn');
+    const offBtn = document.getElementById('relay-off-btn');
+    const toggleBtn = document.getElementById('relay-toggle-btn');
+  
+    
+    function updateStatus() {
+      fetch(`${ESP32_BASE_URL}/status`)
+        .then(r => r.text())
+        .then(state => {
+          statusEl.textContent = state;
+          statusEl.style.color = (state === 'ON') ? '#4CAF50' : '#F44336';
+        })
+        .catch(() => {
+          statusEl.textContent = 'Unavailable';
+          statusEl.style.color = '#888';
+        });
+    }
+  
+    function sendCommand(endpoint) {
+      fetch(`${ESP32_BASE_URL}/${endpoint}`)
+        .then(r => r.text())
+        .then(msg => {
+          alert(msg);
+          updateStatus();
+        })
+        .catch(() => {
+          alert('Failed to reach ESP32. Check network and address.');
+        });
+    }
+  
+    onBtn.onclick = () => sendCommand('on');
+    offBtn.onclick = () => sendCommand('off');
+    toggleBtn.onclick = () => sendCommand('toggle');
+  
+    // Update status on page load
+    updateStatus();
+  </script>
