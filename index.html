@@ -5,7 +5,6 @@
   <title>ESP32 Relay Control Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* Same CSS as before - no changes needed */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -53,7 +52,7 @@
     .relay-card button:hover {
       opacity: 0.8;
     }
-    #allOffBtn {
+    #allOffBtn, #logoutBtn {
       max-width: 300px;
       width: 90%;
       padding: 12px 25px;
@@ -64,19 +63,56 @@
       margin: 15px auto;
       display: block;
       color: white;
-      background-color: #d32f2f;
       transition: opacity 0.3s ease;
+    }
+    #allOffBtn {
+      background-color: #d32f2f;
     }
     #allOffBtn:hover {
       opacity: 0.8;
     }
+    #logoutBtn {
+      background-color: #555;
+    }
+    #logoutBtn:hover {
+      opacity: 0.8;
+    }
 
-    .relay-container {
-      max-width: 960px;
-      margin: 20px auto 0;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+    /* Authentication Question */
+    #authQuestion {
+      max-width: 400px;
+      margin: 80px auto 20px;
+      background: white;
+      padding: 30px 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    #authQuestion button {
+      width: 48%;
+      margin: 10px 1%;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    #yesBtn {
+      background-color: #43a047;
+    }
+    #yesBtn:hover {
+      background-color: #388e3c;
+    }
+    #noBtn {
+      background-color: #e53935;
+    }
+    #noBtn:hover {
+      background-color: #c62828;
+    }
+
+    #dashboard {
+      display: none;
     }
 
     @media (max-width: 700px) {
@@ -102,34 +138,44 @@
 
   <h1>ESP32 Relay Control Dashboard</h1>
 
-  <!-- Dashboard -->
-  <div class="relay-container">
-    <div class="relay-card">
-      <h2>Relay 1</h2>
-      <p>Status: <span id="status1">Loading...</span></p>
-      <button id="btn1">Toggle</button>
-    </div>
-
-    <div class="relay-card">
-      <h2>Relay 2</h2>
-      <p>Status: <span id="status2">Loading...</span></p>
-      <button id="btn2">Toggle</button>
-    </div>
-
-    <div class="relay-card">
-      <h2>Relay 3</h2>
-      <p>Status: <span id="status3">Loading...</span></p>
-      <button id="btn3">Toggle</button>
-    </div>
-
-    <div class="relay-card">
-      <h2>Relay 4</h2>
-      <p>Status: <span id="status4">Loading...</span></p>
-      <button id="btn4">Toggle</button>
-    </div>
+  <!-- Authentication Question -->
+  <div id="authQuestion">
+    <p>Do you want to authenticate as admin?</p>
+    <button id="yesBtn">Yes</button>
+    <button id="noBtn">No</button>
   </div>
 
-  <button id="allOffBtn">All OFF</button>
+  <!-- Dashboard -->
+  <div id="dashboard">
+    <div class="relay-container">
+      <div class="relay-card">
+        <h2>Relay 1</h2>
+        <p>Status: <span id="status1">Loading...</span></p>
+        <button id="btn1">Toggle</button>
+      </div>
+
+      <div class="relay-card">
+        <h2>Relay 2</h2>
+        <p>Status: <span id="status2">Loading...</span></p>
+        <button id="btn2">Toggle</button>
+      </div>
+
+      <div class="relay-card">
+        <h2>Relay 3</h2>
+        <p>Status: <span id="status3">Loading...</span></p>
+        <button id="btn3">Toggle</button>
+      </div>
+
+      <div class="relay-card">
+        <h2>Relay 4</h2>
+        <p>Status: <span id="status4">Loading...</span></p>
+        <button id="btn4">Toggle</button>
+      </div>
+    </div>
+
+    <button id="allOffBtn">All OFF</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
 
   <footer>
     Created by Tech StudyCell
@@ -138,6 +184,7 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js "></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js "></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js "></script>
 
   <script>
     // Firebase config
@@ -153,16 +200,33 @@
 
     firebase.initializeApp(firebaseConfig);
 
-    const db = firebase.database();
+    const authQuestion = document.getElementById("authQuestion");
+    const dashboard = document.getElementById("dashboard");
 
-    const relays = [
-      { id: 1, path: "relay1" },
-      { id: 2, path: "relay2" },
-      { id: 3, path: "relay3" },
-      { id: 4, path: "relay4" },
-    ];
+    document.getElementById("yesBtn").addEventListener("click", () => {
+      // Simulate auto-login (you can later use Firebase custom auth if needed)
+      authQuestion.style.display = "none";
+      dashboard.style.display = "block";
+      startRelayControl();
+    });
+
+    document.getElementById("noBtn").addEventListener("click", () => {
+      // Redirect to dashboard without authentication
+      authQuestion.style.display = "none";
+      dashboard.style.display = "block";
+      startRelayControl();
+    });
 
     function startRelayControl() {
+      const db = firebase.database();
+
+      const relays = [
+        { id: 1, path: "relay1" },
+        { id: 2, path: "relay2" },
+        { id: 3, path: "relay3" },
+        { id: 4, path: "relay4" },
+      ];
+
       relays.forEach(relay => {
         const statusText = document.getElementById(`status${relay.id}`);
         const toggleButton = document.getElementById(`btn${relay.id}`);
@@ -188,8 +252,10 @@
       };
     }
 
-    // Start the app without login
-    startRelayControl();
+    document.getElementById("logoutBtn").onclick = () => {
+      dashboard.style.display = "none";
+      location.reload(); // Reset UI to show auth question again
+    };
   </script>
 </body>
 </html>
