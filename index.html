@@ -5,7 +5,6 @@
   <title>ESP32 Relay Control Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* Your existing CSS styles go here */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -53,7 +52,7 @@
     .relay-card button:hover {
       opacity: 0.8;
     }
-    #allOffBtn, #logoutBtn {
+    #allOffBtn {
       max-width: 300px;
       width: 90%;
       padding: 12px 25px;
@@ -64,23 +63,11 @@
       margin: 15px auto;
       display: block;
       color: white;
-      transition: opacity 0.3s ease;
-    }
-    #allOffBtn {
       background-color: #d32f2f;
+      transition: opacity 0.3s ease;
     }
     #allOffBtn:hover {
       opacity: 0.8;
-    }
-    #logoutBtn {
-      background-color: #555;
-    }
-    #logoutBtn:hover {
-      opacity: 0.8;
-    }
-
-    #dashboard {
-      display: none;
     }
 
     footer {
@@ -105,11 +92,6 @@
 <body>
 
   <h1>ESP32 Relay Control Dashboard</h1>
-
-  <!-- Loading Message -->
-  <div id="loginForm">
-    <p>Logging you in automatically...</p>
-  </div>
 
   <!-- Dashboard -->
   <div id="dashboard">
@@ -140,7 +122,6 @@
     </div>
 
     <button id="allOffBtn">All OFF</button>
-    <button id="logoutBtn">Logout</button>
   </div>
 
   <footer>
@@ -150,7 +131,6 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js "></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js "></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js "></script>
 
   <script>
     // Firebase config
@@ -167,28 +147,9 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
 
-    const loginForm = document.getElementById("loginForm");
-    const dashboard = document.getElementById("dashboard");
-
-    // Predefined credentials
-    const autoEmail = "crayfish@gmail.com";
-    const autoPassword = "barangaybaritao";
-
-    // Auto sign-in on page load
-    firebase.auth().signInWithEmailAndPassword(autoEmail, autoPassword)
-      .then(userCredential => {
-        console.log("Signed in as", userCredential.user.email);
-        loginForm.style.display = "none";
-        dashboard.style.display = "block";
-        startRelayControl();
-      })
-      .catch(error => {
-        alert("Auto-login failed: " + error.message);
-      });
+    const db = firebase.database();
 
     function startRelayControl() {
-      const db = firebase.database();
-
       const relays = [
         { id: 1, path: "relay1" },
         { id: 2, path: "relay2" },
@@ -201,12 +162,14 @@
         const toggleButton = document.getElementById(`btn${relay.id}`);
         const relayRef = db.ref("/" + relay.path);
 
+        // Listen for changes in Firebase
         relayRef.on("value", (snapshot) => {
           const state = snapshot.val();
           statusText.innerText = state ? "ON" : "OFF";
           toggleButton.style.backgroundColor = state ? "green" : "blue";
         });
 
+        // Toggle relay on button click
         toggleButton.onclick = () => {
           relayRef.get().then(snap => {
             relayRef.set(!snap.val());
@@ -214,22 +177,18 @@
         };
       });
 
+      // All OFF button
       document.getElementById("allOffBtn").onclick = () => {
         relays.forEach(relay => {
           db.ref("/" + relay.path).set(false);
         });
       };
-
-      document.getElementById("logoutBtn").onclick = () => {
-        firebase.auth().signOut()
-          .then(() => {
-            location.reload(); // Reload page after logout
-          })
-          .catch(error => {
-            alert("Logout failed: " + error.message);
-          });
-      };
     }
+
+    // Start relay control when page loads
+    window.onload = () => {
+      startRelayControl();
+    };
   </script>
 </body>
 </html>
