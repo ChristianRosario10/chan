@@ -5,7 +5,7 @@
   <title>ESP32 Relay Control Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* Keep your existing CSS styles here */
+    /* Your existing CSS styles go here */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -106,9 +106,9 @@
 
   <h1>ESP32 Relay Control Dashboard</h1>
 
-  <!-- Auto Login Message -->
+  <!-- Loading Message -->
   <div id="loginForm">
-    <p>Authenticating you securely...</p>
+    <p>Logging you in automatically...</p>
   </div>
 
   <!-- Dashboard -->
@@ -153,7 +153,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js "></script>
 
   <script>
-    // Your Firebase config
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAJvhdBfLdUeZaPglFQsHfsIlxanY2scfY",
       authDomain: "esp32monitoring-f842f.firebaseapp.com",
@@ -170,15 +170,19 @@
     const loginForm = document.getElementById("loginForm");
     const dashboard = document.getElementById("dashboard");
 
-    // Automatically sign in anonymously
-    firebase.auth().signInAnonymously()
-      .then(() => {
-        console.log("Signed in anonymously");
+    // Predefined credentials
+    const autoEmail = "crayfish@gmail.com";
+    const autoPassword = "barangaybaritao";
+
+    // Auto sign-in on page load
+    firebase.auth().signInWithEmailAndPassword(autoEmail, autoPassword)
+      .then(userCredential => {
+        console.log("Signed in as", userCredential.user.email);
         loginForm.style.display = "none";
         dashboard.style.display = "block";
         startRelayControl();
       })
-      .catch((error) => {
+      .catch(error => {
         alert("Auto-login failed: " + error.message);
       });
 
