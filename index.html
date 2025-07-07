@@ -5,6 +5,7 @@
   <title>ESP32 Relay Control Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    /* Keep your existing CSS styles here */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -78,41 +79,15 @@
       opacity: 0.8;
     }
 
-    /* Authentication Question */
-    #authQuestion {
-      max-width: 400px;
-      margin: 80px auto 20px;
-      background: white;
-      padding: 30px 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    #authQuestion button {
-      width: 48%;
-      margin: 10px 1%;
-      padding: 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      color: white;
-      transition: background-color 0.3s ease;
-    }
-    #yesBtn {
-      background-color: #43a047;
-    }
-    #yesBtn:hover {
-      background-color: #388e3c;
-    }
-    #noBtn {
-      background-color: #e53935;
-    }
-    #noBtn:hover {
-      background-color: #c62828;
-    }
-
     #dashboard {
       display: none;
+    }
+
+    footer {
+      font-size: 0.9rem;
+      color: #666;
+      padding: 10px 0;
+      margin-top: 40px;
     }
 
     @media (max-width: 700px) {
@@ -125,24 +100,15 @@
         padding: 0 10px 60px;
       }
     }
-
-    footer {
-      font-size: 0.9rem;
-      color: #666;
-      padding: 10px 0;
-      margin-top: 40px;
-    }
   </style>
 </head>
 <body>
 
   <h1>ESP32 Relay Control Dashboard</h1>
 
-  <!-- Authentication Question -->
-  <div id="authQuestion">
-    <p>Do you want to authenticate as admin?</p>
-    <button id="yesBtn">Yes</button>
-    <button id="noBtn">No</button>
+  <!-- Auto Login Message -->
+  <div id="loginForm">
+    <p>Authenticating you securely...</p>
   </div>
 
   <!-- Dashboard -->
@@ -187,7 +153,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js "></script>
 
   <script>
-    // Firebase config
+    // Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAJvhdBfLdUeZaPglFQsHfsIlxanY2scfY",
       authDomain: "esp32monitoring-f842f.firebaseapp.com",
@@ -198,24 +164,23 @@
       appId: "1:680606266535:web:7b9970ff1cc712eeb59782"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
 
-    const authQuestion = document.getElementById("authQuestion");
+    const loginForm = document.getElementById("loginForm");
     const dashboard = document.getElementById("dashboard");
 
-    document.getElementById("yesBtn").addEventListener("click", () => {
-      // Simulate auto-login (you can later use Firebase custom auth if needed)
-      authQuestion.style.display = "none";
-      dashboard.style.display = "block";
-      startRelayControl();
-    });
-
-    document.getElementById("noBtn").addEventListener("click", () => {
-      // Redirect to dashboard without authentication
-      authQuestion.style.display = "none";
-      dashboard.style.display = "block";
-      startRelayControl();
-    });
+    // Automatically sign in anonymously
+    firebase.auth().signInAnonymously()
+      .then(() => {
+        console.log("Signed in anonymously");
+        loginForm.style.display = "none";
+        dashboard.style.display = "block";
+        startRelayControl();
+      })
+      .catch((error) => {
+        alert("Auto-login failed: " + error.message);
+      });
 
     function startRelayControl() {
       const db = firebase.database();
@@ -250,12 +215,17 @@
           db.ref("/" + relay.path).set(false);
         });
       };
-    }
 
-    document.getElementById("logoutBtn").onclick = () => {
-      dashboard.style.display = "none";
-      location.reload(); // Reset UI to show auth question again
-    };
+      document.getElementById("logoutBtn").onclick = () => {
+        firebase.auth().signOut()
+          .then(() => {
+            location.reload(); // Reload page after logout
+          })
+          .catch(error => {
+            alert("Logout failed: " + error.message);
+          });
+      };
+    }
   </script>
 </body>
 </html>
